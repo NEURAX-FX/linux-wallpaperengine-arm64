@@ -8,11 +8,17 @@ Unofficial **aarch64 (ARM64)** builds, packaged for **Fedora 45**, of:
 Both projects are MIT / GPL-3.0 licensed; this repository only hosts the
 rebuilt binaries and the build recipe.
 
+## Download
+
+All artifacts are attached to the
+[`v0.4.15-arm64` release](https://github.com/NEURAX-FX/linux-wallpaperengine-arm64/releases/tag/v0.4.15-arm64),
+with a `SHA256SUMS` file.
+
 ## Install (Fedora 45 aarch64)
 
 ```bash
 sudo dnf install ./linux-wallpaperengine-0.20260609-1.gita0ddce5.fc45.aarch64.rpm \
-                 ./linux-wallpaper-engine-0.4.15-arm64.rpm
+                 ./linux-wallpaper-engine-0.4.15-aarch64.rpm
 ```
 
 The UI looks up `linux-wallpaperengine` in `PATH`; the engine package installs

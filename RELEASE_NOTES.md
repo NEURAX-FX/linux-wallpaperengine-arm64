@@ -48,19 +48,16 @@ content, same as on x86_64.
 - `file`/`readelf`: every shipped ELF is `ARM aarch64`; RPM metadata reports
   `Architecture: aarch64`; CEF archive was checked against the upstream SHA-1
   (`3bcb0e39…`).
-- Engine: `linux-wallpaperengine --help` exits 0 under `qemu-aarch64` with the
-  Fedora 45 aarch64 userland, resolving `libcef.so` from the packaged payload.
-- UI: packaged `linux-wallpaper-engine --version` starts the Chromium main
-  process under `qemu-aarch64` + `Xvfb` (child processes cannot be spawned
-  without binfmt registration; that is a qemu limitation, not a package one).
-- Steamworks addon: loaded in aarch64 Node 22 under `qemu-aarch64`; exports
-  `init`, `runCallbacks`, `workshop.getAllItems`, `workshop.subscribe`,
+- Engine: `linux-wallpaperengine --help` exits 0 in the native ARM64 Fedora 45
+  build container, resolving `libcef.so` from the packaged payload.
+- The Steamworks addon loads in native ARM64 Node 22 and exports `init`,
+  `runCallbacks`, `workshop.getAllItems`, `workshop.subscribe`,
   `workshop.unsubscribe`, `workshop.download`, `workshop.downloadInfo`,
-  `workshop.installInfo`, `callback.register`.
+  `workshop.installInfo`, and `callback.register`.
 
 ## Notes
 
-- Cross-compiled on x86_64 against the Fedora 45 aarch64 sysroot; the RPMs
-  target Fedora 45 (glibc 2.42).
+- Built natively on GitHub's `ubuntu-24.04-arm` runner with the engine inside a
+  Fedora 45 ARM64 container; the RPMs target Fedora 45 (glibc 2.42).
 - No AppImage: electron-updater's AppImage target is not produced for aarch64.
 - CEF debug info was stripped; the runtime payload is ~480 MiB installed.

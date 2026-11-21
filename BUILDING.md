@@ -1,59 +1,38 @@
 # Building the aarch64 packages
 
-Host: Fedora 45 x86_64. Target: Fedora 45 aarch64 (glibc 2.42).
+Host: GitHub-hosted `ubuntu-24.04-arm` (native aarch64, 4 CPUs, 16 GB RAM).
+The engine is built in a native Fedora 45 ARM64 container; the Steamworks addon
+and UI build directly on the ARM64 runner. No cross compiler, extracted sysroot,
+or QEMU is required.
 
-## 1. Target sysroot
+Workflow: `NEURAX-FX/lwe-arm64-ci/.github/workflows/build.yml`.
 
-Signed Fedora 45 aarch64 RPMs are fetched from the Huawei Cloud mirror and
-verified with the Fedora 45 key, then extracted into `.work/f45-cross`:
+## 1. Native ARM64 runner
 
-```bash
-dnf5 --forcearch=aarch64 --releasever=45 \
-  --repofrompath=wap-fedora,https://mirrors.huaweicloud.com/fedora/releases/45/Everything/aarch64/os/ \
-  --repofrompath=wap-updates,https://mirrors.huaweicloud.com/fedora/updates/45/Everything/aarch64/ \
-  --repo=wap-fedora,wap-updates download --resolve --alldeps \
-  --destdir=.work/fedora45-aarch64-rpms \
-  glibc-devel libstdc++-devel gcc libatomic gmp-devel mpfr-devel \
-  dbus-devel freeglut-devel freetype-devel fftw-devel glew-devel glfw-devel \
-  glm-devel lz4-devel libXcursor-devel libXi-devel libXinerama-devel \
-  libXrandr-devel libXxf86vm-devel mesa-libGL-devel libglvnd-devel mpv-devel \
-  ffmpeg-free-devel pulseaudio-libs-devel zlib-ng-compat-devel wayland-devel \
-  wayland-protocols-devel sdl2-compat-devel
-
-rpmkeys --dbpath .work/f45-rpmkeys --import /usr/share/pki/rpm-gpg/RPM-GPG-KEY-45-fedora
-rpmkeys --dbpath .work/f45-rpmkeys --checksig .work/fedora45-aarch64-rpms/*.rpm
-```
-
-The RPMs are extracted with `rpm2cpio | cpio` into `.work/f45-cross`; the
-cross toolchain is Fedora's `aarch64-linux-gnu-gcc` 16.2.1. Because that
-toolchain's own `limits.h` shadows glibc's, the build defines
-`MB_LEN_MAX=16` (glibc's documented value).
-
-Toolchain file: `.work/fedora45-aarch64-toolchain.cmake`.
+The workflow installs host packaging tools (`fpm`, `rpm`, `zip`) and verifies
+the host with `uname -m`. Fedora dependencies are installed in `fedora:45`
+from the Fedora 45 aarch64 Everything repository on Huawei Cloud with RPM
+signature verification enabled. The CEF archive remains pinned to
+135.0.17 `linuxarm64` minimal and is checked against its published SHA-1.
 
 ## 2. Engine
 
+Inside the Fedora 45 container, configure and install natively:
+
 ```bash
-cmake -S .work/engine-src -B .work/engine-build -G Ninja \
+cmake -S . -B build -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_PREFIX=/usr/lib64/linux-wallpaperengine \
-  -DCMAKE_TOOLCHAIN_FILE=.work/fedora45-aarch64-toolchain.cmake \
-  -DCMAKE_EXE_LINKER_FLAGS="-L.../usr/lib/gcc/aarch64-redhat-linux/16 \
-    -Wl,-rpath-link,.../usr/lib64 -lgcc_s" \
   -DSPIRV_CROSS_SKIP_INSTALL=ON \
-  -DBUILD_TESTING=OFF -DKISSFFT_STATIC=ON -DLZ4_GOOD_VERSION_EXITCODE=0
-ninja -C .work/engine-build linux-wallpaperengine qjs_exe qjsc
-DESTDIR=.work/engine-install cmake --install .work/engine-build
+  -DBUILD_TESTING=OFF -DKISSFFT_STATIC=ON \
+  -DKISSFFT_TEST=OFF -DKISSFFT_TOOLS=OFF
+cmake --build build --parallel 4 --target linux-wallpaperengine qjs_exe qjsc
+DESTDIR=.work/engine-install cmake --install build
 ```
 
-`-lgcc_s` is required because the cross toolchain does not add it for the
-thin `linux-wallpaperengine` executable; `qjs_exe`/`qjsc` are built only
-because the vendored quickjs install rules reference them.
-
-CEF 135.0.17 `linuxarm64` minimal is the only dependency without a domestic
-mirror; it is fetched from `cef-builds.spotifycdn.com` with 32 parallel HTTP
-range requests and verified against the published SHA-1
-`3bcb0e3994b4f2db168c314468eb7cc2f3ea0d64`.
+The explicit KissFFT test/tool switches keep CMake install from referencing
+unused command-line targets. CI runs `linux-wallpaperengine --help` from the
+installed payload before packaging.
 
 ## 3. UI
 

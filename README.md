@@ -43,12 +43,12 @@ content, exactly like the x86_64 builds.
 ## Verification performed
 
 - All ELF files are `ARM aarch64` (`file`/`readelf`).
-- `linux-wallpaperengine --help` runs under `qemu-aarch64` against the Fedora 45 aarch64 sysroot.
-- The Steamworks addon loads in aarch64 Node 22 (`qemu-aarch64`) and exposes
+- `linux-wallpaperengine --help` runs in the native ARM64 Fedora 45 container used by CI.
+- The packaged Steamworks addon loads in native ARM64 Node 22 and exposes
   `init`, `runCallbacks`, `workshop.getAllItems`, `workshop.subscribe`,
   `workshop.unsubscribe`, `workshop.download`, `workshop.downloadInfo`,
   `workshop.installInfo`, `callback.register`.
-- `electron --version` runs under `qemu-aarch64`.
+- CI checks the engine and addon ELF headers and both RPM metadata architectures.
 
 ## Build recipe
 
@@ -56,7 +56,7 @@ See [BUILDING.md](BUILDING.md).
 
 ## Notes / known limits
 
-- Built by cross-compiling on x86_64 with the Fedora 45 aarch64 sysroot, so the
-  RPMs target Fedora 45 userland (glibc 2.42).
+- Built natively on GitHub's `ubuntu-24.04-arm` runner; the engine build uses a
+  Fedora 45 ARM64 container, so the RPMs target Fedora 45 userland (glibc 2.42).
 - The UI's AppImage target is not built for aarch64; use the RPM or ZIP.
 - Wallpaper Engine itself is Windows-only; this is the Linux reimplementation.

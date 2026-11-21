@@ -10,6 +10,16 @@ Unofficial **ARM64** builds of the wallpaper engine runtime and the desktop UI.
 | Electron | official `linux-arm64` | 39.7.0 |
 | Steamworks SDK | Valve `redistributable_bin/linuxarm64` | v1.65 |
 
+## Assets
+
+| File | Size |
+| --- | --- |
+| `linux-wallpaperengine-0.20260609-1.gita0ddce5.fc45.aarch64.rpm` | 148 MiB |
+| `linux-wallpaperengine-0.20260609-aarch64.zip` | 148 MiB |
+| `linux-wallpaper-engine-0.4.15-aarch64.rpm` | 74 MiB |
+| `linux-wallpaper-engine-0.4.15-arm64.zip` | 107 MiB |
+| `SHA256SUMS` | checksums for all of the above |
+
 ## Install
 
 ```bash
@@ -35,11 +45,14 @@ content, same as on x86_64.
 
 ## Verification
 
-- `file`/`readelf`: every shipped ELF is `ARM aarch64`.
-- Engine: `linux-wallpaperengine --help` under `qemu-aarch64` with the
-  Fedora 45 aarch64 userland.
-- UI: packaged `linux-wallpaper-engine --version` under `qemu-aarch64` +
-  `Xvfb`.
+- `file`/`readelf`: every shipped ELF is `ARM aarch64`; RPM metadata reports
+  `Architecture: aarch64`; CEF archive was checked against the upstream SHA-1
+  (`3bcb0e39…`).
+- Engine: `linux-wallpaperengine --help` exits 0 under `qemu-aarch64` with the
+  Fedora 45 aarch64 userland, resolving `libcef.so` from the packaged payload.
+- UI: packaged `linux-wallpaper-engine --version` starts the Chromium main
+  process under `qemu-aarch64` + `Xvfb` (child processes cannot be spawned
+  without binfmt registration; that is a qemu limitation, not a package one).
 - Steamworks addon: loaded in aarch64 Node 22 under `qemu-aarch64`; exports
   `init`, `runCallbacks`, `workshop.getAllItems`, `workshop.subscribe`,
   `workshop.unsubscribe`, `workshop.download`, `workshop.downloadInfo`,
@@ -47,7 +60,7 @@ content, same as on x86_64.
 
 ## Notes
 
-- Built by cross-compiling on x86_64 against the Fedora 45 aarch64 sysroot;
-  the RPMs target Fedora 45 (glibc 2.42).
+- Cross-compiled on x86_64 against the Fedora 45 aarch64 sysroot; the RPMs
+  target Fedora 45 (glibc 2.42).
 - No AppImage: electron-updater's AppImage target is not produced for aarch64.
-- The engine RPM contains CEF's unstripped runtime minus DWARF sections.
+- CEF debug info was stripped; the runtime payload is ~480 MiB installed.

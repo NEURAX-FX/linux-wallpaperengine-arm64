@@ -1,0 +1,92 @@
+name: publish-arm64
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Successful build-aarch64 workflow run ID
+        required: true
+        type: string
+      tag:
+        description: Release tag to update
+        required: true
+        default: v0.4.15-arm64
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-arm64
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      CI_REPOSITORY: NEURAX-FX/lwe-arm64-ci
+      RELEASE_REPOSITORY: ${{ github.repository }}
+      RUN_ID: ${{ inputs.run_id }}
+      RELEASE_TAG: ${{ inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Install verification tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends rpm unzip
+
+      - name: Download build artifact
+        run: |
+          for attempt in 1 2 3; do
+            rm -rf artifact
+            if gh run download "$RUN_ID" \
+              --repo "$CI_REPOSITORY" \
+              --name aarch64-release \
+              --dir artifact; then
+              break
+            fi
+            if [ "$attempt" = 3 ]; then
+              echo 'artifact download failed after 3 attempts' >&2
+              exit 1
+            fi
+            sleep 15
+          done
+          find artifact -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
+
+      - name: Verify release payload
+        run: |
+          cd artifact
+          sha256sum -c SHA256SUMS
+          for rpm in *.rpm; do
+            test "$(rpm -qp --qf '%{ARCH}' "$rpm")" = aarch64
+          done
+          for zip in *.zip; do
+            tmp=$(mktemp -d)
+            unzip -q "$zip" -d "$tmp"
+            while IFS= read -r -d '' file; do
+              description=$(file -b "$file")
+              case "$description" in
+                *'ARM aarch64'*) ;;
+                ELF*)
+                  echo "non-ARM ELF in $zip: $file ($description)" >&2
+                  exit 1
+                  ;;
+              esac
+            done < <(find "$tmp" -type f -print0 | while IFS= read -r -d '' file; do
+              if [ "$(head -c4 "$file" | od -An -tx1 | tr -d ' \n')" = 7f454c46 ]; then
+                printf '%s\0' "$file"
+              fi
+            done)
+            rm -rf "$tmp"
+          done
+
+      - name: Upload release assets
+        run: |
+          gh release upload "$RELEASE_TAG" artifact/* \
+            --repo "$RELEASE_REPOSITORY" \
+            --clobber
+          gh release view "$RELEASE_TAG" \
+            --repo "$RELEASE_REPOSITORY" \
+            --json assets \
+            --jq '.assets[] | [.name, .size] | @tsv'

@@ -38,7 +38,7 @@ content, exactly like the x86_64 builds.
 | --- | --- |
 | Engine runtime | C++20, CEF 135.0.17 `linuxarm64` minimal, X11 + Wayland (wlr-layer-shell) |
 | UI | Electron 39.7.0 official `linux-arm64`, asar-packed Vite bundles |
-| Steam Workshop addon | `steamworks.js` 0.4.0 sources rebuilt for aarch64 against Steamworks SDK v1.65 |
+| Steam Workshop addon | `steamworks.js` 0.4.0 sources rebuilt for aarch64 against `steamworks` 0.13.1 and its ABI-matched `steamworks-sys` runtime |
 
 ## Verification performed
 

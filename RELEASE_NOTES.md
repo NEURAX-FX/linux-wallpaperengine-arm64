@@ -8,7 +8,7 @@ Unofficial **ARM64** builds of the wallpaper engine runtime and the desktop UI.
 | Desktop UI | jagrat7/linux-wallpaper-engine | v0.4.15 |
 | CEF | official `linuxarm64` minimal | 135.0.17 |
 | Electron | official `linux-arm64` | 39.7.0 |
-| Steamworks SDK | Valve `redistributable_bin/linuxarm64` | v1.65 |
+| Steamworks runtime | ABI-matched ARM64 runtime bundled by `steamworks-sys` 0.13.0 |
 
 ## Assets
 
@@ -39,8 +39,9 @@ content, same as on x86_64.
 - Engine: C++20, CEF 135.0.17 `linuxarm64` minimal, X11 + Wayland
   (wlr-layer-shell) enabled, SDL2 via Fedora's `sdl2-compat`.
 - UI: Vite bundles + asar; the Steamworks native addon was rebuilt for
-  aarch64 from `steamworks.js` 0.4.0 sources against Steamworks SDK v1.65,
-  because upstream only ships x64/arm64-macOS binaries.
+  aarch64 from `steamworks.js` 0.4.0 sources against `steamworks` 0.13.1 and
+  its matching `steamworks-sys` runtime, because upstream only ships
+  x64/arm64-macOS binaries.
 - Electron 39.7.0 `linux-arm64` from the official release (SHA-256 verified).
 
 ## Verification

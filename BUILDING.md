@@ -52,17 +52,18 @@ node scripts/app.mjs build
 
 `steamworks.js` 0.4.0 ships only x64/x86/arm64-macOS binaries. Its Rust
 sources are rebuilt for aarch64 against `steamworks` 0.13.1 /
-`steamworks-sys` 0.13.0 (Steamworks SDK v1.65), with small API updates for the
-newer crate and an aarch64 branch in `index.js`. Crates come from the rsproxy
-mirror.
+`steamworks-sys` 0.13.0. Cargo's bundled ARM64 `libsteam_api.so` is used because
+it matches those bindings; the separate Steamworks 1.65 redistributable exports
+newer interface versions and cannot satisfy this crate without a binding update.
+Crates come from the rsproxy mirror.
 
 ```bash
-cargo build --release --target aarch64-unknown-linux-gnu   # in .work/addon
+cargo build --locked --release   # native ARM64 runner, in addon
 ```
 
 The resulting `libsteamworksjs.so` is installed as
 `node_modules/steamworks.js/dist/linux64/steamworksjs.linux-arm64-gnu.node`,
-next to the SDK's aarch64 `libsteam_api.so` (RPATH `$ORIGIN`).
+next to Cargo's ABI-matched `libsteam_api.so` (RPATH `$ORIGIN`).
 
 ## 5. Packages
 

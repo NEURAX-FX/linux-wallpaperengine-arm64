@@ -8,17 +8,13 @@ Unofficial **ARM64** builds of the wallpaper engine runtime and the desktop UI.
 | Desktop UI | jagrat7/linux-wallpaper-engine | v0.4.15 |
 | CEF | official `linuxarm64` minimal | 135.0.17 |
 | Electron | official `linux-arm64` | 39.7.0 |
-| Steamworks runtime | ABI-matched ARM64 runtime bundled by `steamworks-sys` 0.13.0 |
+| Steamworks runtime | ARM64 library bundled with `steamworks-sys` | 0.13.0 |
 
 ## Assets
 
-| File | Size |
-| --- | --- |
-| `linux-wallpaperengine-0.20260609-1.gita0ddce5.fc45.aarch64.rpm` | 148 MiB |
-| `linux-wallpaperengine-0.20260609-aarch64.zip` | 148 MiB |
-| `linux-wallpaper-engine-0.4.15-aarch64.rpm` | 74 MiB |
-| `linux-wallpaper-engine-0.4.15-arm64.zip` | 107 MiB |
-| `SHA256SUMS` | checksums for all of the above |
+The engine and desktop UI are each available as an RPM and a portable ZIP.
+Download `SHA256SUMS` with the assets and check their integrity with
+`sha256sum -c SHA256SUMS`.
 
 ## Install
 
@@ -46,19 +42,17 @@ content, same as on x86_64.
 
 ## Verification
 
-- `file`/`readelf`: every shipped ELF is `ARM aarch64`; RPM metadata reports
-  `Architecture: aarch64`; CEF archive was checked against the upstream SHA-1
-  (`3bcb0e39…`).
-- Engine: `linux-wallpaperengine --help` exits 0 in the native ARM64 Fedora 45
-  build container, resolving `libcef.so` from the packaged payload.
-- The Steamworks addon loads in native ARM64 Node 22 and exports `init`,
-  `runCallbacks`, `workshop.getAllItems`, `workshop.subscribe`,
-  `workshop.unsubscribe`, `workshop.download`, `workshop.downloadInfo`,
-  `workshop.installInfo`, and `callback.register`.
+- [Native ARM64 build](https://github.com/NEURAX-FX/lwe-arm64-ci/actions/runs/44913602961):
+  `linux-wallpaperengine --help` exits 0 in the Fedora 45 build container;
+  the packaged Steamworks addon loads in ARM64 Node 22 with `init` and
+  `workshop.getAllItems` exposed.
+- [Release verification](https://github.com/NEURAX-FX/linux-wallpaperengine-arm64/actions/runs/44916570654):
+  both RPMs report `aarch64`, the ELF files in both ZIPs are ARM64, and all four
+  files match `SHA256SUMS`.
 
 ## Notes
 
 - Built natively on GitHub's `ubuntu-24.04-arm` runner with the engine inside a
-  Fedora 45 ARM64 container; the RPMs target Fedora 45 (glibc 2.42).
-- No AppImage: electron-updater's AppImage target is not produced for aarch64.
+  Fedora 45 ARM64 container. The RPMs target Fedora 45 aarch64.
+- No AppImage is included; use the RPM or ZIP.
 - CEF debug info was stripped; the runtime payload is ~480 MiB installed.

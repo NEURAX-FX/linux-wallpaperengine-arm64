@@ -38,10 +38,17 @@ cmake -S .work/engine-src -B .work/engine-build -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_PREFIX=/usr/lib64/linux-wallpaperengine \
   -DCMAKE_TOOLCHAIN_FILE=.work/fedora45-aarch64-toolchain.cmake \
+  -DCMAKE_EXE_LINKER_FLAGS="-L.../usr/lib/gcc/aarch64-redhat-linux/16 \
+    -Wl,-rpath-link,.../usr/lib64 -lgcc_s" \
+  -DSPIRV_CROSS_SKIP_INSTALL=ON \
   -DBUILD_TESTING=OFF -DKISSFFT_STATIC=ON -DLZ4_GOOD_VERSION_EXITCODE=0
-ninja -C .work/engine-build
+ninja -C .work/engine-build linux-wallpaperengine qjs_exe qjsc
 DESTDIR=.work/engine-install cmake --install .work/engine-build
 ```
+
+`-lgcc_s` is required because the cross toolchain does not add it for the
+thin `linux-wallpaperengine` executable; `qjs_exe`/`qjsc` are built only
+because the vendored quickjs install rules reference them.
 
 CEF 135.0.17 `linuxarm64` minimal is the only dependency without a domestic
 mirror; it is fetched from `cef-builds.spotifycdn.com` with 32 parallel HTTP
@@ -80,9 +87,15 @@ next to the SDK's aarch64 `libsteam_api.so` (RPATH `$ORIGIN`).
 
 ## 5. Packages
 
+`.work/package-engine-final.sh` strips DWARF from every ELF in the payload
+(CEF's `libcef.so` shrinks from 2.0 GiB to 389 MiB), drops headers/static
+libraries/cmake files/quickjs CLIs, keeps `chrome-sandbox` setuid, builds the
+portable ZIP, and cross-packages the RPM with `fpm` (host `rpmbuild` refuses
+`BuildArch: aarch64` on x86_64):
+
 ```bash
-rpmbuild --target aarch64 --define "_topdir $PWD/.work/rpmbuild" \
-  -bb .work/rpmbuild/SPECS/linux-wallpaperengine.spec
+fpm -s dir -t rpm -n linux-wallpaperengine -v 0.20260609 \
+  --iteration 1.gita0ddce5 --rpm-dist fc45 --architecture aarch64 ...
 ```
 
 The UI RPM/ZIP come from `electron-builder` (`release-arm64/`).
